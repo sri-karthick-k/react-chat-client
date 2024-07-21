@@ -1,0 +1,105 @@
+/* chat.css */
+.chat-container {
+    color: black;
+  }
+  
+  .chat-header {
+    background-color: #f5f5f5;
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background-color: #fafafa;
+  }
+  
+  .chat-message-list {
+    list-style-type: none;
+    padding: 0;
+    width: 100%;
+  }
+  
+  .chat-message-list li {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    word-break: break-word; /* Handle long words or URLs */
+  }
+  
+  .message-sent {
+    background-color: #d4edda; /* Light green background for sent messages */
+    align-self: flex-end;
+  }
+  
+  .message-received {
+    background-color: #e2e3e5; /* Light gray background for received messages */
+    align-self: flex-start;
+  }
+  
+  .chat-message-list li .message-content {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .chat-message-list li .message-text {
+    display: flex;
+    align-items: center;
+  }
+  
+  .chat-message-list li .message-text strong {
+    margin-right: 10px;
+  }
+  
+  .chat-message-list li img {
+    max-width: 100%;
+    max-height: 200px;
+    height: auto;
+    display: block;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    object-fit: cover;
+  }
+  
+  .chat-input-container {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+    background-color: #f5f5f5;
+  }
+  
+  .chat-input-container input[type="text"] {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-right: 10px;
+  }
+  
+  .chat-input-container input[type="file"] {
+    display: none;
+  }
+  
+  .chat-input-container label {
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+  }
+  
+  .chat-input-container button {
+    background-color: #28a745;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  

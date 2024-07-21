@@ -1,12 +1,16 @@
 /* eslint-disable react/prop-types */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+
+import "../Styles/Chat.css";
 
 const Chat = ({ loggedInUser, selectedUser }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [socket, setSocket] = useState(null);
   const [mediaFile, setMediaFile] = useState(null);
+
+  const messagesEndRef = useRef(null); // Create a ref to the end of the messages list
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -16,6 +20,7 @@ const Chat = ({ loggedInUser, selectedUser }) => {
         });
 
         setMessages(response.data.messages);
+        console.log(response);
       } catch (error) {
         console.error('Error fetching messages:', error);
       }
@@ -29,21 +34,16 @@ const Chat = ({ loggedInUser, selectedUser }) => {
 
     ws.onopen = () => {
       console.log('WebSocket connection established');
-      const msgData1 = {
+      const msgData = {
         sender_username: loggedInUser.username,
-        content: ""
-      }
-      console.log(JSON.stringify({ msgData: msgData1 }))
-      ws.send(JSON.stringify({
-        sender_username: loggedInUser.username,
-        content: ""
-      }));
+        content: ''
+      };
+      ws.send(JSON.stringify(msgData));
     };
 
     ws.onmessage = (event) => {
-      console.log("Message received!")
       const messageData = JSON.parse(event.data);
-      console.log(messageData)
+      console.log(messageData);
       setMessages((prevMessages) => [...prevMessages, messageData]);
     };
 
@@ -62,11 +62,16 @@ const Chat = ({ loggedInUser, selectedUser }) => {
     };
   }, [loggedInUser.username]);
 
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]); // Scroll to the bottom when messages are updated
+
   const handleSendMessage = async () => {
     if (!newMessage.trim() && !mediaFile) return;
 
     const reader = new FileReader();
-    let mediaBase64 = '';
 
     const sendMessage = (mediaBase64 = '') => {
       const msgData = {
@@ -80,7 +85,7 @@ const Chat = ({ loggedInUser, selectedUser }) => {
         socket.send(JSON.stringify(msgData));
         setNewMessage('');
         setMediaFile(null);
-        document.getElementById('fileInput').value = ''; 
+        document.getElementById('fileInput').value = '';
       } catch (error) {
         console.error('Error sending message:', error);
       }
@@ -89,7 +94,7 @@ const Chat = ({ loggedInUser, selectedUser }) => {
     if (mediaFile) {
       reader.readAsDataURL(mediaFile);
       reader.onloadend = () => {
-        mediaBase64 = reader.result.split(',')[1]; // Remove the "data:image/png;base64," prefix
+        const mediaBase64 = reader.result.split(',')[1];
         sendMessage(mediaBase64);
       };
     } else {
@@ -97,34 +102,61 @@ const Chat = ({ loggedInUser, selectedUser }) => {
     }
   };
 
-  return (
-    <div>
-      <h2>Chat with {selectedUser.username}</h2>
-      <ul>
-        {messages ?
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.size > 60 * 1024) { // Check if file size is greater than 60KB
+      alert('File size exceeds 60KB. Please choose a smaller file.');
+      setMediaFile(null);
+      document.getElementById('fileInput').value = ''; // Clear file input
+    } else {
+      setMediaFile(file);
+    }
+  };
+
+  return (
+    <div className="chat-container">
+      <h2 className="chat-header">Chat with {selectedUser.username}</h2>
+      <ul className="chat-messages chat-message-list">
+        {messages.length > 0 ? (
           messages.map((message, index) => (
-            <li key={index}>
-              <strong>{message.senderId === loggedInUser.id ? 'You' : selectedUser.username}:</strong>
+            <li
+              key={index}
+              className={message.senderId === loggedInUser.id || message.sender_id === loggedInUser.id ? 'message-sent' : 'message-received'}
+            >
+              <div>
+                {message.media && <img src={`data:image/jpeg;base64,${message.media}`} alt="media" />}
+              </div>
+              <strong>
+                {message.senderId === loggedInUser.id || message.sender_id === loggedInUser.id ? 'You' : selectedUser.username}:
+              </strong>
               {message.body}
-              {message.media && <img src={`data:image/jpeg;base64,${message.media}`} alt="media" />}
             </li>
           ))
-          :
-          <h3>start messaging by sending a Hi!</h3>
-        }
+        ) : (
+          <h3>Start messaging by sending a Hi!</h3>
+        )}
+        <div ref={messagesEndRef} /> {/* Element to scroll into view */}
       </ul>
-      <div>
+      <div className="chat-input-container">
         <input
           type="text"
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder="Type your message"
+          onKeyDown={handleKeyDown}
         />
+        <label htmlFor="fileInput">{mediaFile === null ? "Choose File" : mediaFile.name}</label>
         <input
           type="file"
           id="fileInput"
-          onChange={(e) => setMediaFile(e.target.files[0])}
+          onChange={handleFileChange}
         />
         <button onClick={handleSendMessage}>Send</button>
       </div>
