@@ -13,7 +13,11 @@ const Chat = ({ loggedInUser, selectedUser }) => {
         const response = await axios.get('http://localhost:5000/messages', {
           params: { senderId: loggedInUser.id, receiverId: selectedUser.id },
         });
+        
         setMessages(response.data.messages);
+        console.log(messages)
+        console.log(loggedInUser)
+        console.log(selectedUser)
       } catch (error) {
         console.error('Error fetching messages:', error);
       }
@@ -60,7 +64,6 @@ const Chat = ({ loggedInUser, selectedUser }) => {
     };
 
     try {
-      await axios.post('http://localhost:5000/sendMessage', msgData);
       socket.send(JSON.stringify(msgData));
       setNewMessage('');
     } catch (error) {
@@ -72,11 +75,16 @@ const Chat = ({ loggedInUser, selectedUser }) => {
     <div>
       <h2>Chat with {selectedUser.username}</h2>
       <ul>
-        {messages.map((message, index) => (
+        { messages ?
+        
+        messages.map((message, index) => (
           <li key={index}>
-            <strong>{message.senderId === loggedInUser.id ? 'You' : selectedUser.username}:</strong> {message.body}
+            <strong>{message.sender_id === loggedInUser.id ? 'You' : selectedUser.username}:</strong> {message.body}
           </li>
-        ))}
+        ))
+        :
+        <h3>start messaging by sending a Hi!</h3>
+      }
       </ul>
       <div>
         <input
