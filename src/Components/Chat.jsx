@@ -13,11 +13,8 @@ const Chat = ({ loggedInUser, selectedUser }) => {
         const response = await axios.get('http://localhost:5000/messages', {
           params: { senderId: loggedInUser.id, receiverId: selectedUser.id },
         });
-        
+
         setMessages(response.data.messages);
-        console.log(messages)
-        console.log(loggedInUser)
-        console.log(selectedUser)
       } catch (error) {
         console.error('Error fetching messages:', error);
       }
@@ -31,11 +28,21 @@ const Chat = ({ loggedInUser, selectedUser }) => {
 
     ws.onopen = () => {
       console.log('WebSocket connection established');
-      ws.send(JSON.stringify({ username: loggedInUser.username }));
+      const msgData1 = {
+        sender_username: loggedInUser.username, 
+        content: ""
+      }
+      console.log(JSON.stringify({ msgData: msgData1 }))
+      ws.send(JSON.stringify({
+        sender_username: loggedInUser.username, 
+        content: ""
+      }));
     };
 
     ws.onmessage = (event) => {
+      console.log("Message received!")
       const messageData = JSON.parse(event.data);
+      console.log(messageData)
       setMessages((prevMessages) => [...prevMessages, messageData]);
     };
 
@@ -75,16 +82,16 @@ const Chat = ({ loggedInUser, selectedUser }) => {
     <div>
       <h2>Chat with {selectedUser.username}</h2>
       <ul>
-        { messages ?
-        
-        messages.map((message, index) => (
-          <li key={index}>
-            <strong>{message.sender_id === loggedInUser.id ? 'You' : selectedUser.username}:</strong> {message.body}
-          </li>
-        ))
-        :
-        <h3>start messaging by sending a Hi!</h3>
-      }
+        {messages ?
+
+          messages.map((message, index) => (
+            <li key={index}>
+              <strong>{message.sender_id === loggedInUser.id ? 'You' : selectedUser.username}:</strong> {message.body}
+            </li>
+          ))
+          :
+          <h3>start messaging by sending a Hi!</h3>
+        }
       </ul>
       <div>
         <input
@@ -100,4 +107,3 @@ const Chat = ({ loggedInUser, selectedUser }) => {
 };
 
 export default Chat;
-
