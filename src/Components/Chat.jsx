@@ -6,6 +6,7 @@ const Chat = ({ loggedInUser, selectedUser }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [socket, setSocket] = useState(null);
+  const [mediaFile, setMediaFile] = useState(null);
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -29,12 +30,12 @@ const Chat = ({ loggedInUser, selectedUser }) => {
     ws.onopen = () => {
       console.log('WebSocket connection established');
       const msgData1 = {
-        sender_username: loggedInUser.username, 
+        sender_username: loggedInUser.username,
         content: ""
       }
       console.log(JSON.stringify({ msgData: msgData1 }))
       ws.send(JSON.stringify({
-        sender_username: loggedInUser.username, 
+        sender_username: loggedInUser.username,
         content: ""
       }));
     };
@@ -62,19 +63,37 @@ const Chat = ({ loggedInUser, selectedUser }) => {
   }, [loggedInUser.username]);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() && !mediaFile) return;
 
-    const msgData = {
-      sender_username: loggedInUser.username,
-      receiver_username: selectedUser.username,
-      content: newMessage,
+    const reader = new FileReader();
+    let mediaBase64 = '';
+
+    const sendMessage = (mediaBase64 = '') => {
+      const msgData = {
+        sender_username: loggedInUser.username,
+        receiver_username: selectedUser.username,
+        content: newMessage,
+        media_base64: mediaBase64,
+      };
+
+      try {
+        socket.send(JSON.stringify(msgData));
+        setNewMessage('');
+        setMediaFile(null);
+        document.getElementById('fileInput').value = ''; 
+      } catch (error) {
+        console.error('Error sending message:', error);
+      }
     };
 
-    try {
-      socket.send(JSON.stringify(msgData));
-      setNewMessage('');
-    } catch (error) {
-      console.error('Error sending message:', error);
+    if (mediaFile) {
+      reader.readAsDataURL(mediaFile);
+      reader.onloadend = () => {
+        mediaBase64 = reader.result.split(',')[1]; // Remove the "data:image/png;base64," prefix
+        sendMessage(mediaBase64);
+      };
+    } else {
+      sendMessage();
     }
   };
 
@@ -86,7 +105,9 @@ const Chat = ({ loggedInUser, selectedUser }) => {
 
           messages.map((message, index) => (
             <li key={index}>
-              <strong>{message.sender_id === loggedInUser.id ? 'You' : selectedUser.username}:</strong> {message.body}
+              <strong>{message.senderId === loggedInUser.id ? 'You' : selectedUser.username}:</strong>
+              {message.body}
+              {message.media && <img src={`data:image/jpeg;base64,${message.media}`} alt="media" />}
             </li>
           ))
           :
@@ -99,6 +120,11 @@ const Chat = ({ loggedInUser, selectedUser }) => {
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder="Type your message"
+        />
+        <input
+          type="file"
+          id="fileInput"
+          onChange={(e) => setMediaFile(e.target.files[0])}
         />
         <button onClick={handleSendMessage}>Send</button>
       </div>
