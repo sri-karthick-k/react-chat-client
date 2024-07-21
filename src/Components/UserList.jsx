@@ -8,7 +8,7 @@ const UserList = ({ loggedInUser, onSelectUser }) => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/chatUsers', { params: { userId: loggedInUser.Id } });
+        const response = await axios.get('http://localhost:5000/chatUsers', { params: { userId: loggedInUser.id } });
         setUsers(response.data.users);
       } catch (error) {
         console.error('Error fetching users:', error);
@@ -24,7 +24,7 @@ const UserList = ({ loggedInUser, onSelectUser }) => {
       <ul>
         {users.map(user => (
           <li key={user.id} onClick={() => onSelectUser(user)}>
-            {user.Username}
+            {user.username}
           </li>
         ))}
       </ul>
