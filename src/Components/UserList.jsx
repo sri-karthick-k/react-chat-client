@@ -1,43 +1,8 @@
-// /* eslint-disable react/prop-types */
-// import { useState, useEffect } from 'react';
-// import axios from 'axios';
-
-// const UserList = ({ loggedInUser, onSelectUser }) => {
-//   const [users, setUsers] = useState([]);
-
-//   useEffect(() => {
-//     const fetchUsers = async () => {
-//       try {
-//         const response = await axios.get('http://localhost:5000/chatUsers', { params: { userId: loggedInUser.id } });
-//         setUsers(response.data.users);
-//       } catch (error) {
-//         console.error('Error fetching users:', error);
-//       }
-//     };
-
-//     fetchUsers();
-//   }, [loggedInUser]);
-
-//   return (
-//     <div>
-//       <h2>Select User</h2>
-//       <ul>
-//         {users.map(user => (
-//           <li key={user.id} onClick={() => onSelectUser(user)}>
-//             {user.username}
-//           </li>
-//         ))}
-//       </ul>
-//     </div>
-//   );
-// };
-
-// export default UserList;
-
-
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+
+import '../Styles/UserList.css'
 
 const UserList = ({ loggedInUser, onSelectUser }) => {
     const [users, setUsers] = useState([]);
@@ -84,29 +49,32 @@ const UserList = ({ loggedInUser, onSelectUser }) => {
     };
 
     return (
-        <div>
-            <h2>Select User</h2>
-            <ul>
-                {
-                    users ?
+        <div className='user-list-container'>
+            <div className='user-list-box'>
+                <h2>Select User</h2>
+                <ul className="user-list">
+                    {users ? (
                         users.map((user) => (
-                            <li key={user.id} onClick={() => onSelectUser(user)}>
+                            <li key={user.id} onClick={() => onSelectUser(user)} className='user-item'>
                                 {user.username}
                             </li>
                         ))
-                        : <h1>No users</h1>
-                }
-            </ul>
-            <div>
-                <input
-                    type="text"
-                    value={newUsername}
-                    onChange={(e) => setNewUsername(e.target.value)}
-                    placeholder="Enter username"
-                />
-                <button onClick={handleSelectNewUser}>Select</button>
+                    ) : (
+                        <h3 className="no-users">No users</h3>
+                    )}
+                </ul>
+                <div className='user-input-container'>
+                    <input
+                        type="text"
+                        value={newUsername}
+                        onChange={(e) => setNewUsername(e.target.value)}
+                        placeholder="Enter username"
+                        className='username-input'
+                    />
+                    <button onClick={handleSelectNewUser} className='select-button'>Select</button>
+                </div>
+                {error && <p className='error-message'>{error}</p>}
             </div>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
         </div>
     );
 };

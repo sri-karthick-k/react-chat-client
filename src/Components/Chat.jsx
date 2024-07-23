@@ -44,7 +44,11 @@ const Chat = ({ loggedInUser, selectedUser }) => {
     ws.onmessage = (event) => {
       const messageData = JSON.parse(event.data);
       console.log(messageData);
-      setMessages((prevMessages) => [...prevMessages, messageData]);
+      if (Array.isArray(messageData)) {
+        setMessages((prevMessages) => [...prevMessages, ...messageData]);
+      } else {
+        setMessages((prevMessages) => Array.isArray(prevMessages) ? [...prevMessages, messageData] : [messageData]);
+      }    
     };
 
     ws.onerror = (error) => {
@@ -124,7 +128,7 @@ const Chat = ({ loggedInUser, selectedUser }) => {
     <div className="chat-container">
       <h2 className="chat-header">Chat with {selectedUser.username}</h2>
       <ul className="chat-messages chat-message-list">
-        {messages.length > 0 ? (
+        {messages ? (
           messages.map((message, index) => (
             <li
               key={index}
