@@ -3,8 +3,12 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
 import "../Styles/Chat.css";
+import { toast } from 'react-toastify';
+import UserContext from '../contexts/UserContext.js'
+import DangerButton from './Comps/DangerButton.jsx';
+import logoutFunc from '../helpers/logoutFunc.js';
 
-const Chat = ({ loggedInUser, selectedUser }) => {
+const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [socket, setSocket] = useState(null);
@@ -12,22 +16,49 @@ const Chat = ({ loggedInUser, selectedUser }) => {
 
   const messagesEndRef = useRef(null); // Create a ref to the end of the messages list
 
+  const loggedInUser = UserContext.getUserDetails('username')
+  const selectedUser = UserContext.getUserDetails('selectedUser')
+  const selectedUserId = parseInt(UserContext.getUserDetails('selectedUserId'))
+
   useEffect(() => {
+    console.log(loggedInUser)
+    console.log(selectedUser)
+    
     const fetchMessages = async () => {
       try {
         const response = await axios.get('http://localhost:5000/messages', {
-          params: { senderId: loggedInUser.id, receiverId: selectedUser.id },
+          params: { receiverId: selectedUserId },
+          withCredentials: true
         });
 
-        setMessages(response.data.messages);
-        console.log(response);
+        if(response.status === 200){
+          setMessages(response.data.messages);
+        } else if (response.status === 401){
+          toast.error("Session timed out! Please login again")
+          setTimeout(()=>{
+              logoutFunc();
+              window.location = "/"
+          }, 1000);
+        }
       } catch (error) {
+        if(error.code === 'ERR_NETWORK'){
+          toast.error("Server is down! Please try again")
+          return;
+        }if (error.status === 401){
+          toast.error("Session timed out! Please login again")
+          setTimeout(()=>{
+              logoutFunc();
+              window.location = "/"
+          }, 1000);
+        } else {
+          toast.error(error)
+        }
         console.error('Error fetching messages:', error);
       }
     };
 
     fetchMessages();
-  }, [loggedInUser, selectedUser]);
+  }, [selectedUser]);
 
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:5000/ws');
@@ -35,7 +66,7 @@ const Chat = ({ loggedInUser, selectedUser }) => {
     ws.onopen = () => {
       console.log('WebSocket connection established');
       const msgData = {
-        sender_username: loggedInUser.username,
+        sender_username: loggedInUser,
         content: ''
       };
       ws.send(JSON.stringify(msgData));
@@ -43,7 +74,6 @@ const Chat = ({ loggedInUser, selectedUser }) => {
 
     ws.onmessage = (event) => {
       const messageData = JSON.parse(event.data);
-      console.log(messageData);
       if (Array.isArray(messageData)) {
         setMessages((prevMessages) => [...prevMessages, ...messageData]);
       } else {
@@ -64,7 +94,7 @@ const Chat = ({ loggedInUser, selectedUser }) => {
     return () => {
       ws.close();
     };
-  }, [loggedInUser.username]);
+  }, []);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -79,8 +109,8 @@ const Chat = ({ loggedInUser, selectedUser }) => {
 
     const sendMessage = (mediaBase64 = '') => {
       const msgData = {
-        sender_username: loggedInUser.username,
-        receiver_username: selectedUser.username,
+        sender_username: loggedInUser,
+        receiver_username: selectedUser,
         content: newMessage,
         media_base64: mediaBase64,
       };
@@ -126,19 +156,34 @@ const Chat = ({ loggedInUser, selectedUser }) => {
 
   return (
     <div className="chat-container">
-      <h2 className="chat-header">Chat with {selectedUser.username}</h2>
+      <span className="chat-header flex-container">
+        <h2>Chat with {selectedUser} </h2>
+        <DangerButton />
+      </span>
       <ul className="chat-messages chat-message-list">
         {messages ? (
           messages.map((message, index) => (
             <li
               key={index}
-              className={message.senderId === loggedInUser.id || message.sender_id === loggedInUser.id ? 'message-sent' : 'message-received'}
+              className=
+              {
+                message.receiver_id == selectedUserId 
+                || 
+                message.receiverId == selectedUserId 
+                ? 
+                'message-sent' : 'message-received'
+              }
             >
               <div>
                 {message.media && <img src={`data:image/jpeg;base64,${message.media}`} alt="media" />}
               </div>
               <strong>
-                {message.senderId === loggedInUser.id || message.sender_id === loggedInUser.id ? 'You' : selectedUser.username}:
+              {message.receiver_id == selectedUserId 
+                || 
+                message.receiverId == selectedUserId 
+                ? 
+                'You' : selectedUser
+              }:
               </strong>
               {message.body}
             </li>

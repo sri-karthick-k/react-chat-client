@@ -1,0 +1,22 @@
+TODO for High Availability Messaging System Using RabbitMQ
+
+-- Front-End
+
+1. Handle Error statements
+    i.   UnAuthorized during login - done
+    ii.  Display username or email Already Exists during registration
+    iii.
+
+
+2. Implement JWT http only cookie
+
+3. Implement Back button code to switch from UserList component to
+    Chat component
+
+4. Implement login credentials for active load balancer checker
+
+5. Implement adding more RabbitMQ node feature via Front-End
+
+6. Fix: Messages are not sent in Localhost
+
+7.

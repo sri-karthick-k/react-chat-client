@@ -15,7 +15,18 @@
   border-bottom: 4px solid #383838;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 1);
   /* Shadow effect */
-  width: 100%;
+  /* width: 100%; */
+}
+
+.flex-container{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-danger{
+  background-color: red;
+  float: right;
 }
 
 .chat-messages {
